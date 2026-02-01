@@ -1,0 +1,13 @@
+{
+    "00000000000": {
+        "name": "Admin",
+        "password": "admin"
+    },
+    "12345678999": {
+        "name": "gabriel guilherme",
+        "password": "11123456789",
+        "crm": "233213123123213",
+        "crm_state": "CRM-PB",
+        "speciality": "cardiologist"
+    }
+}
