@@ -68,9 +68,55 @@ For this project, the analysis was based on energy variation: If at any point in
 
 This topic will focus on explaining the signal filtering steps as well as the statistical method chosen to find possible anomalous events.
 
+#### ECG Signal Preprocessing Step
+
+When we receive electrocardiogram signals, we can see that the signals received are generally noisy, containing undesirable frequency components related to everything from the device's electrical network to the patient's muscle contractions. The table below relates the main frequency ranges obtained from a raw ECG signal and their respective real events:
+
+| Frequency Range | Interpretation |
+|-----------------|----------------|
+|0 - 0.5 hz       | Baseline drift, respiration |
+|0.5 - 3 hz       | Heart rhythm (QRS, P, T) |
+|3 - 15 hz        | Cardiac harmonics |
+|above 30 - 40 hz | Muscle noise, electrical network |
+
+
+Therefore, even before we begin analyzing the signal, it becomes necessary to construct a digital filter and apply it to attenuate the inconvenient frequency components and leave only the components of interest: those originating from the patient's heartbeats.
+
+##### The Construction of the Digital Filter
+
+In this sense, we must create a digital filter that, in addition to filtering the desired frequency range for ECG analysis, requires consideration of the filter order and the windowing technique to be adopted.
+
+- The choice of FIR filter
+
+IIR type filters are faster in terms of computational processing than FIR filters when compared with the same filter order and, consequently, require fewer calculations and less computational power. However, there is a possibility of delays associated with this speed, which would compromise the accuracy of the filtered ECG signal.
+
+Therefore, the type of filter chosen for the application was the FIR type due to its constant phase, guaranteeing the stability of the filtered ECG signal. On the other hand, the order of the FIR filter to be applied will be higher to compensate for the lack of computational power when compared to the IIR filter.
+
+- The choice of bandpass filter
+
+Notice that the frequency range table gives us a range of 0.5 - 40 Hz where we can obtain the frequency components that represent the heart rate and its harmonics.
+
+Consequently, the most recommended approach is to use a bandpass filter composed of a lower and upper cutoff frequency, which determine our desired range.
+
+*You might even think that, in terms of practicality, it would be better to use a low-pass filter, where frequencies above 40 Hz would be attenuated. However, the frequency components below 0.5 Hz would pass through the filter and add inaccuracies to the filtered signal. This would compromise the statistical analysis of the signal for the detection of anomalous events in the future...*
+
+- The Choice of Windowing Technique
+
+Choosing the type of windowing technique to be used is essential to avoid problems with ripples in the passbands located between the windows, edge effects, and spectral leakage of frequencies.
+
+The technique I chose was the Hanning window, because in addition to smoothing the edges, it has less ripple in the passband compared to other windowing techniques such as Hamming.
+
+This ensures better accuracy in the filtered components and fewer problems related to spectral leakage of frequencies. This improves the efficiency of the energy-per-period analysis that will be performed in the future to discover anomalous events.
+
+#### ECG Signal Analysis Step
+
+##### Energy calculation
+##### Energy differences
+##### Detection of possible anomalies
+
 --- 
 
-### The Software Architecture
+### The Dashboard Architecture
 ---
 
 ### Licensed 
