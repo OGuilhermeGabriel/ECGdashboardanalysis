@@ -7,7 +7,8 @@
 >- [*Instructions*](#instructions)
 >- [*How the Dashboard works*](#how-the-dashboard-works)
 >- [*The Digital Processing of the ECG Signal*](#the-digital-processing-of-the-ecg-signal)
->- [*The Software Architecture*](#the-software-architecture)
+>- [*The Dashboard Architecture*](#the-dashboard-architecture)
+>- [*Lincensed*](#licensed)
 ---
 
 ### Project's Stack 
@@ -23,7 +24,6 @@
 2) Download the application dependencies described in requirements.txt
 3) If you only want to access the pipeline that exemplifies the electrocardiogram signal processing, run: 
 ```python3 test_pipeline.py```
-
 4) To run the dashboard: 
 ```streamlit run ./dashboard/app.py```
 ---
@@ -108,15 +108,123 @@ The technique I chose was the Hanning window, because in addition to smoothing t
 
 This ensures better accuracy in the filtered components and fewer problems related to spectral leakage of frequencies. This improves the efficiency of the energy-per-period analysis that will be performed in the future to discover anomalous events.
 
+- The choice of filter order
+
+Initially, I started working with higher order filters like 80, 90, and 100 in order to minimize the transition band between the desired frequency band for my application and the frequency band to be attenuated.
+
+However, it was observed that as the filter order increases, the **amplitude peaks of the original signal are also attenuated**. Conversely, if the filter order is too low, the transition band would consequently be larger, and some undesirable frequency components would pass through the filter.
+
+Therefore, I adjusted the value to best suit my application, using a 10th order filter. The comparison between these two graphs highlights my choice.
+
+> Impact of the 100th order filter
+![rawvsfiltered_order_100](/assets/raw%20vs%20filtered%20ecg%20order%20100.png)
+> Impact of the 10th order filter 
+![rawvsfiltered_order_10](/assets/raw%20vs%20filtered%20ecg%20order%2010%20.png)
+
 #### ECG Signal Analysis Step
 
 ##### Energy calculation
+
+The calculation of the total energy of a finite digital signal can be defined as follows:
+
+$$E = \sum_{n=0}^{N-1} x[n]^2$$
+
+Note that this calculation will be a summation of the energies of the samples contained only within the interval of a window of size *L*, varying in position by *k*. Therefore, we can define the energy of each window to be computed as follows:
+
+$$E_k = \frac{1}{L} \sum_{n=k}^{k+L-1} x[n]^2$$
+
+This defines the local energy of each window being the local average power.
+
 ##### Energy differences
+
+Once we define an energy window as just an interval of the signal where we have the computed energy value, we can make this window slide through the ECG signal, iterating sample by sample in a loop where each time this window slides we will be calculating the energy difference at various points in the signal. We can represent this mathematically as follows:
+
+$$\Delta E[n] = E[n] - E[n-1]$$
+
 ##### Detection of possible anomalies
+
+The result of this energy variation can indicate some representations:
+
+1. ΔE ≈ 0 → The ECG is stable
+2. Large positive ΔE → If a QRS complex occurs
+3. Large negative ΔE → After a QRS complex occurs
+
+And the simple anomaly detector I made is based precisely on this idea and uses the mean and standard deviation to define the thresholds that will indicate possible anomalies.
+
+- Mean (µ)
+
+$$\mu=E[\Delta E]$$
+
+Calculating the mean of the energy variation will give us the expected central level of our variation. In other words, it defines for us what the "normal" behavior of the system would be.
+
+And the simple anomaly detector I made is based precisely on this idea and uses the mean and standard deviation to define the thresholds that will indicate possible anomalies.
+
+- Standard Deviation (σ) 
+
+$$\sigma = \sqrt{E[(\Delta E - \mu)^2]}$$
+
+Calculating the standard deviation will be indispensable for us, considering that it will tell us how much the energy variations normally oscillate around the mean, that is, it defines the natural scale of fluctuation of the ECG signal. Logo:
+
+> If σ is small:
+The signal is stable. Small changes are already relevant.
+
+> If σ is large:
+The signal is naturally more variable. Larger changes are needed to consider it an anomaly.
+
+- Thresholds
+
+We can finally define our thresholds that will dictate anomalous events:
+
+$$Threshold = \mu \pm k\sigma$$
+
+The +- signs refer to the positive and negative thresholds, since the points of possible anomalies can exceed either the positive or negative values ​​limited by the thresholds.
+
+It is important to note that *k* will be **the hyperparameter we will use to adjust the sensitivity** of anomalous event detection. We must be careful with this hyperparameter because:
+
+> If *k* is too small: The detector becomes too sensitive, leading to an exaggerated appearance of anomalous events and creating a false-positive result, where the test detects the existence of a disease even if the patient does not have it.
+
+> If *k* is too large: The detector has difficulty passing any point because the thresholds are too high. Therefore, we may miss anomalous events present in the signal.
 
 --- 
 
 ### The Dashboard Architecture
+
+To build the dashboard, I used the Streamlit Python library due to its native integration with the Python ecosystem. The goal was to avoid over-engineering the project as much as possible; that is, building a super-elaborate front-end, a distributed back-end, and creating a relational database to manage a considerably small data flow.
+
+Although the system is not scalable, it will be sufficient for displaying data in a more academic way.
+
+#### Streamlit's multipage architecture
+
+In this sense, I used a multi-page architecture provided by Streamlit to build the dashboard pages.
+
+```
+pages/
+    _Analysis_ECG.py
+    _Home.py
+    _Sign_in.py
+    _Upload_ECG.py
+```
+
+As you can see, in the way it's organized, each page has a corresponding file associated with /pages, automatically becoming a route.
+
+#### Separation of responsibilities
+
+To avoid mixing the code, I separated it into two layers, which are worth mentioning below. The intention is to separate the interface model from the processing logic, thus improving maintainability, testability, and code organization.
+
+- UI Layer
+
+This layer contains the essential files for building the user interface. I'm referring to all those that, in addition to being responsible for the interface, are directly associated with the inputs and the dashboard visualization.
+
+For example, all the files in /pages make up the UI layer.
+
+- Processing Layer
+
+This layer contains the files necessary to deliver the computational calculations of the dashboard to the user. I'm referring to the mathematical logic, statistics, and the detection algorithm.
+
+#### Separation of data
+
+I also made sure to separate the responsibilities, including the data related to the raw ECG signals from the processed ones. It was a more organized way I found to manage the metadata of the patients' ECG signals.
+
 ---
 
 ### Licensed 

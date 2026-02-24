@@ -12,12 +12,12 @@ FS = 360
 #time unit 
 TIME_UNIT = "seconds"
 
-# --- Low-pass filter (FIR) parameters ---
+# --- Band-pass filter (FIR) parameters ---
 FILTER_CONFIG = {
     "type"      : "FIR",
     "design"    : "window",
     "window"    : "hanning",
-    "order"     : 100,
+    "order"     : 10,
     "fc_low"    : 0.5,
     "fc_high"   : 4.0
 }
