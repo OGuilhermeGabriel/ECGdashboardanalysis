@@ -1,6 +1,7 @@
 # ECG Analysis Dashboard
 ---
-
+- **Full video explanation**: https://www.youtube.com/watch?v=mEIwtYiDcGQ
+---
 ## Summary 
 
 >- [*Project's Stack*](#projects-stack)

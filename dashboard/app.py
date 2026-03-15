@@ -95,7 +95,7 @@ if not st.session_state.logged_in:
     with col3:
         st.markdown(
             "🎥 **Project Explanation (YouTube)**  \n"
-            "[Watch the video](https://www.youtube.com/)"
+            "[Watch the video](https://www.youtube.com/watch?v=mEIwtYiDcGQ)"
         )
 
 # ====== LOGGED IN ======
