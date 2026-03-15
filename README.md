@@ -1,5 +1,7 @@
 # ECG Analysis Dashboard
 ---
+![project preview](/assets/2026-03-1509-37-37-ezgif.com-video-to-gif-converter.gif)
+
 - **Full video explanation**: https://www.youtube.com/watch?v=mEIwtYiDcGQ
 ---
 ## Summary 
